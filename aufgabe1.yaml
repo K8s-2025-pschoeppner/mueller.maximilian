@@ -1,0 +1,94 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: web-content
+  namespace: mueller-maximilian
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset='utf-8'>
+      <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+      <title>Klausur K8s 2025</title>
+      <meta name='viewport' content='width=device-width, initial-scale=1'>
+    </head>
+    <body>
+      <h1>Kubernetes Klausur DHBW 2025</h1>
+      <marquee>Kubernetes is fun!</marquee>
+      <div id="center-div" style="margin-top: 50px; margin-left: 60px; border: 1px solid black;">
+        <p>Center div</p>
+      </div>
+    </body>
+    </html>
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nginx-service-account
+  namespace: mueller-maximilian
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-webserver
+  namespace: mueller-maximilian
+spec:
+  replicas: 2  
+  selector:
+    matchLabels:
+      app: nginx-webserver
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: nginx-webserver
+    spec:
+      serviceAccountName: nginx-service-account 
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - nginx-webserver
+              topologyKey: "kubernetes.io/hostname" 
+      containers:
+      - name: nginx
+        image: nginx:stable
+        ports:
+        - containerPort: 80
+      
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+        volumeMounts:
+        - name: web-content
+          mountPath: /usr/share/nginx/html/
+      volumes:
+      - name: web-content
+        configMap:
+          name: web-content
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-webserver-service
+  namespace: mueller-maximilian
+spec:
+  selector:
+    app: nginx-webserver
+  ports:
+  - port: 80
+    targetPort: 80
+  type: ClusterIP 
