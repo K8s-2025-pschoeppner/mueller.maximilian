@@ -68,7 +68,6 @@ Traffic auf Green umleiten
 ```bash
 kubectl patch service nginx-webserver-service -n mueller-maximilian
 ```
-```
 
 ### Zusatzaufgaben
 
