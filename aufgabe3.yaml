@@ -125,7 +125,7 @@ metadata:
     kubernetes.io/ingress.class: "nginx"
 spec:
   rules:
-  - host: mueller-maximilian.k8s.schoeppi5.de
+  - host: muellerm.k8s.schoeppi5.de
     http:
       paths:
       - path: /
